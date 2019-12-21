@@ -5,6 +5,14 @@ import sys
 import random
 from bs4 import BeautifulSoup
 
+
+class bcolors:
+    SUCCESS = '\033[92m'
+    WARNING = '\033[93m'
+    ERROR = '\033[91m'
+    ENDC = '\033[0m'
+
+
 URL = 'https://www.alza.cz/magic-mouse-2-d3753149.htm?o=1'
 
 headers = {
@@ -27,6 +35,7 @@ def check_price():
     price_arr = soup.findAll("span", {"class": "price_withVat"})
 
     if len(title_arr) == 0 or len(price_arr) == 0:
+        print(f'{bcolors.ERROR}The item you were tracking was not found{bcolors.ENDC}')
         send_warning_mail()
         end_script()
 
@@ -34,14 +43,27 @@ def check_price():
     price = price_arr[0].get_text()
 
     converted_price = int(''.join(price[0:5].split()))
+    original_price = 2290
 
-    print(title)
-    print(converted_price)
+    print(f'The current price of {title} is: {converted_price}')
+
+    compare_prices(original_price, converted_price)
 
     threshold = 2000
 
     if converted_price < threshold:
         send_success_mail()
+
+
+def compare_prices(original_price, converted_price):
+    if original_price < converted_price:
+        print(
+            f'{bcolors.WARNING}There was an increase in price by {converted_price - original_price} CZK{bcolors.ENDC}')
+    elif original_price > converted_price:
+        print(
+            f'{bcolors.SUCCESS}There was a decrease in price by {original_price - converted_price} CZK{bcolors.ENDC}')
+    else:
+        print('There was no change in price')
 
 
 def setup_email_service():
